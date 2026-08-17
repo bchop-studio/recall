@@ -1,5 +1,7 @@
 # recall
 
+![recall](cover.png)
+
 Give your AI agents a living memory.
 
 `recall` keeps a simple, plain-text memory file per project and wires Hermes,
