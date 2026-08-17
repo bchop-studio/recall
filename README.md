@@ -49,3 +49,9 @@ recall load
 ## License
 
 MIT
+
+Made by [bchop-studio](https://github.com/bchop-studio)
+
+Built for people tired of telling their agents the same thing twice.
+
+If this helped, ⭐ the repository so others can find it.
