@@ -22,6 +22,9 @@ venv/
 # Local-only media / private assets (do not commit)
 assets/
 
+# recall per-project memory (user data, not source)
+.recall/
+
 # Windows download metadata junk
 *:Zone.Identifier
 *.Zone.Identifier
