@@ -1,0 +1,27 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+dist/
+.next/
+.turbo/
+*.log
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS junk
+.DS_Store
+
+# Local-only media / private assets (do not commit)
+assets/
+
+# Windows download metadata junk
+*:Zone.Identifier
+*.Zone.Identifier
