@@ -1,0 +1,83 @@
+name: Security baseline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "43 9 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-baseline-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+        with:
+          enable-cache: true
+
+      - name: Install locked development environment
+        run: uv sync --frozen --group dev
+
+      - name: Run tests
+        run: uv run pytest -q
+
+      - name: Compile Python
+        run: uv run python -m compileall -q src tests
+
+      - name: Build packages
+        run: uv build --out-dir dist
+
+      - name: Test the built wheel in isolation
+        run: |
+          uv venv "${RUNNER_TEMP}/recall-smoke"
+          uv pip install --python "${RUNNER_TEMP}/recall-smoke/bin/python" dist/*.whl
+          "${RUNNER_TEMP}/recall-smoke/bin/recall" --help
+
+      - name: Check documented shell commands
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          import subprocess
+
+          blocks = re.findall(r"```bash\n(.*?)```", Path("README.md").read_text(), re.DOTALL)
+          for block in blocks:
+              subprocess.run(["bash", "-n"], input=block, text=True, check=True)
+          print(f"README.md: {len(blocks)} Bash blocks passed syntax checks")
+          PY
+
+      - name: Reject sensitive or private tracked filenames
+        run: |
+          python - <<'PY'
+          import subprocess
+
+          blocked_names = {"agents.md", ".hermes.md", "buildlog.md", ".env.example", "auth.json"}
+          blocked_suffixes = (".env", ".pem", ".key", "id_rsa", "id_ed25519")
+          tracked = subprocess.check_output(["git", "ls-files"], text=True).splitlines()
+          blocked = [
+              path for path in tracked
+              if path.lower().split("/")[-1] in blocked_names
+              or path.lower().endswith(blocked_suffixes)
+          ]
+          if blocked:
+              raise SystemExit("Sensitive or private tracked filenames: " + ", ".join(blocked))
+          print("tracked filename safety check passed")
+          PY

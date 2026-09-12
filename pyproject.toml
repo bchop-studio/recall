@@ -18,6 +18,16 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/recall"]
 
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/tests",
+    "/README.md",
+    "/LICENSE",
+    "/pyproject.toml",
+    "/uv.lock",
+]
+
 [tool.uv]
 package = true
 
